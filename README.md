@@ -252,5 +252,3 @@ Verifique se a URI `http://vue` está registrada no projeto OPC UA do TIA Portal
 Natan Barboza Andrade
 
 **Instituição:** Faculdade de Tecnologia Senai Roberto Mange — Campinas, SP
-
-teste
