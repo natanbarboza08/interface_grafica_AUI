@@ -11,12 +11,24 @@ const contPecasAmarelas = ref(0)
 const contPecasTotal = ref(0)
 
 const colors = computed(() => [
-  { name: 'Verde', label: 'Verdes', amount: contPecasVerdes.value, color: '#218b63' },
-  { name: 'Amarelo', label: 'Amarelas', amount: contPecasAmarelas.value, color: '#d19a1d' },
-  { name: 'Vermelho', label: 'Vermelhas', amount: contPecasVermelhas.value, color: '#d6453a' },
+  { name: 'Verde', label: 'Verdes', amount: contPecasVerdes.value, color: '#38d69a', id: 'green' },
+  { name: 'Amarelo', label: 'Amarelas', amount: contPecasAmarelas.value, color: '#ffc857', id: 'yellow' },
+  { name: 'Vermelho', label: 'Vermelhas', amount: contPecasVermelhas.value, color: '#ff6584', id: 'red' },
 ])
 
 const total = computed(() => contPecasTotal.value)
+
+function porcentagem(amount) {
+  return total.value > 0 ? Math.round((amount / total.value) * 100) : 0
+}
+
+function estiloAnel(amount, color) {
+  const porcentagemAtual = porcentagem(amount)
+  return {
+    '--ring-value': `${porcentagemAtual * 3.6}deg`,
+    '--ring-color': color,
+  }
+}
 
 function atualizarDados(dados) {
   contPecasVermelhas.value = dados.contPecasVermelhas
@@ -41,113 +53,207 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="brand" aria-label="Interface CLP">
+        <span class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z" />
+            <path d="m4 7.5 8 4.5 8-4.5M12 12v9" />
+          </svg>
+        </span>
+        <span>CLP<span class="brand-dot">/</span>CTRL</span>
+      </div>
 
-    <main>
-      <section class="page-heading">
+      <nav class="side-nav" aria-label="Navegação principal">
+        <span class="nav-label">MONITORAMENTO</span>
+        <a class="nav-item active" href="#overview" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          Visão geral
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-mini">
+          <span :class="{ offline: !opcConectado }"></span>
+          <div>
+            <small>CONTROLLER</small>
+            <strong>Siemens S7-1500</strong>
+          </div>
+        </div>
+        <div class="sidebar-line"></div>
+        <p>SENAI ROBERTO MANGE<br />Campinas · SP</p>
+      </div>
+    </aside>
+
+    <main class="workspace" id="overview">
+      <header class="topbar">
         <div>
-          <p class="eyebrow">LINHA DE TRIAGEM <span>•</span> VISÃO GERAL</p>
-          <h1>Painel de separação por cores</h1>
-          <p class="heading-subtitle">Acompanhamento das peças identificadas por cor pela automação.</p>
+          <p class="breadcrumb"><span>SISTEMA</span> / LINHA 01</p>
+          <h1>Centro de triagem</h1>
         </div>
-        <div class="controller-summary">
-  <span class="connection-badge" :class="{ offline: !opcConectado }">
-    <span class="connection-pulse" aria-hidden="true"></span>
-    {{ opcConectado ? 'CLP Conectado' : 'CLP Desconectado' }}
-  </span>
-  <small>Siemens S7-1500 <i>·</i> OPC UA</small>
-</div>
-      </section>
 
-      <section class="project-card" aria-labelledby="project-title">
-        <div class="project-copy">
-          <div class="section-label"><span class="label-bar"></span> SOBRE O PROJETO</div>
-          <h2 id="project-title">Automação da separação de peças por cor</h2>
-          <p>
-            O CLP desenvolvido para modernizar a linha integra sensores ópticos e atuadores à triagem de
-            peças verdes, amarelas e vermelhas, com apoio de um robô para o direcionamento automatizado.
-            O monitoramento ajuda a identificar leituras imprecisas e falhas de sincronismo que podem causar
-            desvios na classificação e paradas na produção.
-          </p>
+        <div class="topbar-status">
+          <div class="status-text">
+            <span :class="{ offline: !opcConectado }" class="status-indicator"></span>
+            <div>
+              <small>STATUS OPC UA</small>
+              <strong>{{ opcConectado ? 'Sistema online' : 'Sistema offline' }}</strong>
+            </div>
+          </div>
         </div>
-        <div class="project-goal">
-          <span class="goal-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M12 3 4.5 6v5.5c0 4.7 3.2 7.8 7.5 9.5 4.3-1.7 7.5-4.8 7.5-9.5V6L12 3Z" />
-              <path d="m8.5 12 2.2 2.2 4.8-4.8" />
+      </header>
+
+      <section class="command-strip" aria-label="Resumo da linha">
+        <div class="command-item">
+          <span class="command-icon cyan">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 20V8l8-4 8 4v12M8 20v-8h8v8M10 8h4" />
             </svg>
           </span>
           <div>
-            <strong>Mais precisão na classificação</strong>
-            <p>Monitoramento para reduzir desvios por cor e paradas na linha.</p>
+            <small>Linha</small>
+            <strong>Triagem — 01</strong>
+          </div>
+        </div>
+        <div class="command-item">
+          <span class="command-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </span>
+          <div>
+            <small>Atualização</small>
+            <strong>500 ms</strong>
+          </div>
+        </div>
+        <div class="command-item">
+          <span class="command-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 7h16v10H4zM8 11h8M8 14h5" />
+            </svg>
+          </span>
+          <div>
+            <small>Protocolo</small>
+            <strong>OPC UA</strong>
           </div>
         </div>
       </section>
 
-      <section class="materials-section" aria-labelledby="colors-title">
+      <section class="section-block" id="production" aria-labelledby="production-title">
         <div class="section-heading">
           <div>
-            <h2 id="colors-title">Peças identificadas</h2>
-            <p>Contagem por cor</p>
+            <p>CONTADORES EM TEMPO REAL</p>
+            <h2 id="production-title">Peças identificadas</h2>
           </div>
-          <span class="live-label"><span></span> DADOS DA AUTOMAÇÃO</span>
+          <div class="live-tag" :class="{ offline: !opcConectado }">
+            <span></span>
+            {{ opcConectado ? 'Ao vivo' : 'Offline' }}
+          </div>
         </div>
 
-        <div class="material-grid">
-          <article v-for="item in colors" :key="item.name" class="material-card"
-            :style="{ '--material-color': item.color }">
-            <div class="material-card-top">
-              <span class="material-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3 4.5 7.2v9.6L12 21l7.5-4.2V7.2L12 3Z" />
-                  <path d="M12 12 4.5 7.2M12 12l7.5-4.8M12 12v9" />
-                </svg>
-              </span>
-              <span class="material-tag">SEPARADO</span>
+        <div class="counter-grid">
+          <article
+            v-for="item in colors"
+            :key="item.name"
+            class="counter-card"
+            :style="{ '--accent': item.color }"
+          >
+            <div class="counter-card-header">
+              <div>
+                <span class="color-dot"></span>
+                <span>PEÇAS {{ item.label.toUpperCase() }}</span>
+              </div>
+              <span class="counter-code">{{ item.id.toUpperCase() }} / 0{{ colors.indexOf(item) + 1 }}</span>
             </div>
-            <div class="material-amount">{{ String(item.amount).padStart(2, '0') }}</div>
-            <div class="material-name">Peças <strong>{{ item.label }}</strong></div>
-            <span class="material-accent" aria-hidden="true"></span>
+
+            <div class="counter-main">
+              <div class="progress-ring" :style="estiloAnel(item.amount, item.color)">
+                <div class="ring-center">
+                  <strong>{{ String(item.amount).padStart(3, '0') }}</strong>
+                  <small>{{ porcentagem(item.amount) }}%</small>
+                </div>
+              </div>
+
+              <div class="counter-details">
+                <small>CLASSIFICADAS</small>
+                <strong>{{ item.name }}</strong>
+                <div class="detail-line">
+                  <span>Participação</span>
+                  <b>{{ porcentagem(item.amount) }}%</b>
+                </div>
+              </div>
+            </div>
+
+            <div class="counter-footer">
+              <span>CONTADOR</span>
+              <div class="signal-bars" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i>
+              </div>
+            </div>
           </article>
         </div>
       </section>
 
-      <section class="insights-grid">
-        <article class="distribution-card">
-          <div class="distribution-heading">
+      <section class="analytics-grid">
+        <article class="analytics-card">
+          <div class="analytics-header">
             <div>
-              <h2>Resumo da separação</h2>
-              <p>Distribuição das peças identificadas por cor</p>
+              <p>RESUMO DA PRODUÇÃO</p>
+              <h2>Distribuição total</h2>
             </div>
-            <div class="total-count">
-              <strong>{{ String(total).padStart(2, '0') }}</strong>
+            <div class="total-production">
+              <strong>{{ String(total).padStart(4, '0') }}</strong>
               <span>UNIDADES</span>
             </div>
           </div>
-          <div class="distribution-bar" role="img" aria-label="Distribuição das peças nas três cores">
-            <span v-for="item in colors" :key="item.name"
-              :style="{ '--material-color': item.color, flex: item.amount }"></span>
+
+          <div class="distribution-track" role="img" aria-label="Distribuição das peças por cor">
+            <span
+              v-for="item in colors"
+              :key="item.name"
+              :style="{ '--segment-color': item.color, flexGrow: item.amount }"
+            ></span>
           </div>
+
           <div class="distribution-legend">
-            <span v-for="item in colors" :key="item.name">
-              <i :style="{ backgroundColor: item.color }"></i>{{ item.name }}
-            </span>
+            <div v-for="item in colors" :key="item.name">
+              <span class="legend-name">
+                <i :style="{ backgroundColor: item.color }"></i>
+                {{ item.name }}
+              </span>
+              <strong>{{ porcentagem(item.amount) }}%</strong>
+            </div>
           </div>
         </article>
 
-        <article class="status-card" aria-label="Comunicação com o CLP">
-          <span class="communication-state" :class="{ offline: !opcConectado }">
-  <i aria-hidden="true"></i>
-  {{ opcConectado ? 'Recebendo dados' : 'Sem comunicação' }}
-</span>
+        <article class="communication-card" :class="{ offline: !opcConectado }">
+          <div class="communication-top">
+            <div class="communication-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M12 5v14" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </div>
+            <span>OPC UA</span>
+          </div>
+          <div class="communication-state">
+            <p>{{ opcConectado ? 'Comunicação ativa' : 'Sem comunicação' }}</p>
+            <strong>{{ opcConectado ? 'Recebendo dados' : 'Aguardando conexão' }}</strong>
+          </div>
+          <div class="communication-footer">
+            <span>Siemens S7-1500</span>
+            <i></i>
+          </div>
         </article>
       </section>
     </main>
-
-    <footer class="page-footer">
-      <span>Faculdade de Tecnologia Senai Roberto Mange <b>·</b> Campinas, SP</span>
-      <span>Kauan Magalhães Piacente <b>·</b> Nathalia Santos Ferreira</span>
-    </footer>
   </div>
 </template>
 
@@ -160,8 +266,10 @@ onUnmounted(() => {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background: #f3f6f4;
-  color: #17231e;
+  background:
+    radial-gradient(circle at 78% 8%, rgb(75 103 255 / 7%), transparent 22rem),
+    #090c12;
+  color: #edf2f7;
 }
 
 :global(button),
@@ -169,597 +277,907 @@ onUnmounted(() => {
   font: inherit;
 }
 
-.app-shell {
-  width: min(1120px, calc(100% - 64px));
-  margin: 0 auto;
-  padding: 27px 0 25px;
+.dashboard {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100vh;
 }
 
-.topbar {
+.sidebar {
+  position: sticky;
+  top: 0;
   display: flex;
-  justify-content: flex-start;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e1e8e3;
-  color: #78857e;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 1px;
+  height: 100vh;
+  flex-direction: column;
+  padding: 28px 22px 24px;
+  border-right: 1px solid #1b202c;
+  background: #0b0e15;
 }
 
-.topbar i,
-.controller-summary i,
-.communication-summary p i {
-  color: #39a372;
-  font-style: normal;
-}
-
-.connection-badge {
-  display: inline-flex;
+.brand {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid #d5e8dc;
-  border-radius: 999px;
-  background: #f7fcf8;
-  color: #286647;
+  gap: 10px;
+  color: #f5f7fb;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #30384a;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #171c29, #10141d);
+  color: #6f86ff;
+}
+
+.brand-mark svg {
+  width: 21px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.brand-dot {
+  color: #617cff;
+}
+
+.side-nav {
+  display: grid;
+  gap: 7px;
+  margin-top: 52px;
+}
+
+.nav-label {
+  margin: 0 10px 8px;
+  color: #596174;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #747d91;
+  text-decoration: none;
   font-size: 12px;
   font-weight: 500;
 }
 
-.connection-pulse,
-.live-label span {
+.nav-item svg {
+  width: 17px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.nav-item.active {
+  border-color: #242c40;
+  background: linear-gradient(90deg, rgb(97 124 255 / 15%), rgb(97 124 255 / 4%));
+  color: #cbd3e8;
+}
+
+.nav-item.active svg {
+  color: #7188ff;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+}
+
+.system-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 10px;
+  border: 1px solid #1d2431;
+  border-radius: 9px;
+  background: #10141d;
+}
+
+.system-mini > span {
   width: 8px;
   height: 8px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #20a268;
+  background: #38d69a;
+  box-shadow: 0 0 12px rgb(56 214 154 / 70%);
 }
 
-.connection-pulse {
-  box-shadow: 0 0 0 3px #def1e5;
+.system-mini > span.offline {
+  background: #ff6584;
+  box-shadow: 0 0 12px rgb(255 101 132 / 70%);
 }
 
-.controller-summary {
+.system-mini div {
   display: grid;
-  justify-items: end;
-  gap: 7px;
+  gap: 2px;
 }
 
-.controller-summary small {
-  color: #829087;
-  font-size: 10px;
+.system-mini small,
+.sidebar-footer p {
+  color: #626b7d;
+  font-size: 8px;
+  letter-spacing: 0.8px;
 }
 
-.page-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 27px 0 20px;
-}
-
-.eyebrow,
-.section-label {
-  color: #718078;
-  font-size: 10px;
+.system-mini strong {
+  color: #afb7c7;
+  font-size: 9px;
   font-weight: 600;
+}
+
+.sidebar-line {
+  height: 1px;
+  margin: 15px 2px 11px;
+  background: #1b202c;
+}
+
+.sidebar-footer p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.workspace {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 30px 38px 42px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 55px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #1a1f29;
+}
+
+.breadcrumb {
+  margin: 0 0 6px;
+  color: #697286;
+  font-size: 9px;
+  font-weight: 700;
   letter-spacing: 1.2px;
 }
 
-.eyebrow {
-  margin: 0 0 7px;
+.breadcrumb span {
+  color: #697cff;
 }
 
-.eyebrow span {
-  padding: 0 5px;
-  color: #33a06c;
-}
-
-.page-heading h1 {
+.topbar h1 {
   margin: 0;
-  font-size: clamp(24px, 3vw, 29px);
-  font-weight: 600;
-  letter-spacing: -0.9px;
-  line-height: 1.2;
+  font-size: 25px;
+  font-weight: 650;
+  letter-spacing: -0.8px;
 }
 
-.heading-subtitle {
-  margin: 7px 0 0;
-  color: #78857e;
-  font-size: 13px;
-}
-
-.project-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  align-items: center;
-  gap: 25px;
-  padding: 17px 20px;
-  border: 1px solid #dfe8e2;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 4px 14px rgb(34 62 47 / 3%);
-}
-
-.section-label {
+.topbar-status,
+.status-text {
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #438565;
-  font-size: 9px;
 }
 
-.label-bar {
-  width: 14px;
-  height: 2px;
-  border-radius: 2px;
-  background: #38a771;
+.topbar-status {
+  gap: 14px;
 }
 
-.project-copy h2 {
-  margin: 7px 0 5px;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.25px;
+.status-text {
+  gap: 9px;
+  min-width: 130px;
 }
 
-.project-copy p {
-  max-width: 730px;
-  margin: 0;
-  color: #6d7a72;
-  font-size: 11px;
-  line-height: 1.6;
+.status-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #38d69a;
+  box-shadow: 0 0 0 4px rgb(56 214 154 / 8%), 0 0 14px rgb(56 214 154 / 45%);
 }
 
-.project-goal {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 9px;
-  background: #f2f8f4;
+.status-indicator.offline {
+  background: #ff6584;
+  box-shadow: 0 0 0 4px rgb(255 101 132 / 8%), 0 0 14px rgb(255 101 132 / 45%);
 }
 
-.goal-icon {
+.status-text div {
   display: grid;
-  width: 32px;
-  height: 32px;
+  gap: 2px;
+}
+
+.status-text small {
+  color: #626b7d;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+}
+
+.status-text strong {
+  color: #b9c1cf;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.command-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 18px;
+  border: 1px solid #1c222d;
+  border-radius: 10px;
+  background: #0e1219;
+}
+
+.command-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 67px;
+  padding: 10px 18px;
+  border-right: 1px solid #1c222d;
+}
+
+.command-item:last-child {
+  border-right: 0;
+}
+
+.command-icon {
+  display: grid;
+  width: 35px;
+  height: 35px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 9px;
-  background: #e1f0e7;
-  color: #218558;
+  border: 1px solid #263044;
+  border-radius: 8px;
+  background: #151a24;
 }
 
-.goal-icon svg {
+.command-icon svg {
   width: 18px;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 1.7;
+  stroke-width: 1.5;
 }
 
-.project-goal strong {
-  display: block;
-  margin: 1px 0 4px;
+.command-icon.cyan { color: #69b8ff; }
+.command-icon.purple { color: #9c8cff; }
+.command-icon.amber { color: #ffc857; }
+
+.command-item div {
+  display: grid;
+  gap: 3px;
+}
+
+.command-item small {
+  color: #626b7d;
+  font-size: 9px;
+}
+
+.command-item strong {
+  color: #bdc5d3;
   font-size: 11px;
   font-weight: 600;
 }
 
-.project-goal p {
-  margin: 0;
-  color: #718078;
-  font-size: 10px;
-  line-height: 1.5;
+.section-block {
+  margin-top: 28px;
 }
 
-.materials-section {
-  margin-top: 30px;
+.section-heading,
+.analytics-header,
+.counter-card-header,
+.counter-footer,
+.communication-top,
+.communication-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.section-heading h2,
-.distribution-heading h2 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.25px;
+  margin-bottom: 14px;
 }
 
 .section-heading p,
-.distribution-heading p {
-  margin: 3px 0 0;
-  color: #849087;
-  font-size: 10px;
+.analytics-header p {
+  margin: 0 0 4px;
+  color: #6976df;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
 }
 
-.live-label {
+.section-heading h2,
+.analytics-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.live-tag {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #78867d;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #1d4d40;
+  border-radius: 999px;
+  background: rgb(56 214 154 / 5%);
+  color: #63dcb0;
   font-size: 9px;
   font-weight: 600;
+}
+
+.live-tag span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38d69a;
+  box-shadow: 0 0 8px rgb(56 214 154 / 70%);
+}
+
+.live-tag.offline {
+  border-color: #5c2835;
+  background: rgb(255 101 132 / 5%);
+  color: #ff8aa0;
+}
+
+.live-tag.offline span {
+  background: #ff6584;
+  box-shadow: 0 0 8px rgb(255 101 132 / 70%);
+}
+
+.counter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.counter-card {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #202631;
+  border-radius: 11px;
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 1.5%), transparent 35%),
+    #10151d;
+}
+
+.counter-card::after {
+  position: absolute;
+  right: -30px;
+  bottom: -60px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: var(--accent);
+  content: '';
+  filter: blur(70px);
+  opacity: 0.04;
+}
+
+.counter-card-header {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #202630;
+}
+
+.counter-card-header div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aeb6c5;
+  font-size: 9px;
+  font-weight: 700;
   letter-spacing: 0.7px;
 }
 
-.live-label span {
-  width: 6px;
-  height: 6px;
+.color-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
-.material-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+.counter-code {
+  color: #51596a;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
 }
 
-.material-card {
+.counter-main {
   position: relative;
-  overflow: hidden;
-  min-height: 184px;
-  padding: 20px 22px 22px;
-  border: 1px solid #e2e8e4;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 3px 12px rgb(34 62 47 / 2%);
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 122px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 170px;
 }
 
-.material-card-top {
+.progress-ring {
+  display: grid;
+  width: 116px;
+  height: 116px;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #10151d 58%, transparent 59%),
+    conic-gradient(var(--ring-color) 0 var(--ring-value), #242b37 var(--ring-value) 360deg);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 2%),
+    inset 0 0 25px rgb(255 255 255 / 2%);
+}
+
+.ring-center {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  place-content: center;
+  text-align: center;
+  border: 1px solid #242b37;
+  border-radius: 50%;
+  background: #10151d;
+}
+
+.ring-center strong {
+  font-size: 26px;
+  font-weight: 570;
+  letter-spacing: -1.3px;
+  line-height: 1.1;
+}
+
+.ring-center small {
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.counter-details {
+  min-width: 0;
+}
+
+.counter-details > small {
+  color: #596174;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.counter-details > strong {
+  display: block;
+  margin: 5px 0 14px;
+  color: #dce2ec;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.detail-line {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  padding-top: 9px;
+  border-top: 1px solid #202630;
+  color: #697286;
+  font-size: 8px;
 }
 
-.material-icon {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--material-color) 11%, white);
-  color: var(--material-color);
-}
-
-.material-icon svg {
-  width: 23px;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.6;
-}
-
-.material-tag {
-  color: #9aa59e;
+.detail-line b {
+  color: var(--accent);
   font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.65px;
 }
 
-.material-amount {
-  margin-top: 17px;
-  font-family: Arial, sans-serif;
-  font-size: 50px;
-  font-weight: 500;
-  letter-spacing: -1.5px;
-  line-height: 1;
+.counter-footer {
+  position: relative;
+  z-index: 1;
+  height: 23px;
+  border-top: 1px solid #202630;
+  color: #50586a;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
 }
 
-.material-name {
-  margin-top: 9px;
-  color: #7d8981;
-  font-size: 13px;
-}
-
-.material-name strong {
-  color: #35433a;
-  font-weight: 600;
-}
-
-.material-accent {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: var(--material-color);
-  opacity: 0.78;
-}
-
-.insights-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 13px;
-  margin-top: 15px;
-}
-
-.distribution-card,
-.status-card {
-  min-height: 132px;
-  padding: 15px 17px;
-  border: 1px solid #e2e8e4;
-  border-radius: 11px;
-  background: #fff;
-  box-shadow: 0 3px 12px rgb(34 62 47 / 2%);
-}
-
-.distribution-heading {
+.signal-bars {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11px;
 }
 
-.distribution-heading h2,
-.status-card h2 {
-  font-size: 13px;
+.signal-bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--accent);
+  opacity: 0.75;
 }
 
-.distribution-heading p {
-  font-size: 9px;
-}
+.signal-bars i:nth-child(1) { height: 3px; }
+.signal-bars i:nth-child(2) { height: 5px; }
+.signal-bars i:nth-child(3) { height: 7px; }
+.signal-bars i:nth-child(4) { height: 9px; }
+.signal-bars i:nth-child(5) { height: 11px; }
 
-.total-count {
+.analytics-grid {
   display: grid;
-  gap: 1px;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.analytics-card,
+.communication-card {
+  min-height: 138px;
+  border: 1px solid #202631;
+  border-radius: 11px;
+  background: #10151d;
+}
+
+.analytics-card {
+  padding: 17px;
+}
+
+.total-production {
+  display: grid;
   text-align: right;
 }
 
-.total-count strong {
-  font-family: Arial, sans-serif;
-  font-size: 24px;
-  font-weight: 500;
+.total-production strong {
+  font-size: 23px;
+  font-weight: 550;
   letter-spacing: -1px;
   line-height: 1;
 }
 
-.total-count span {
-  color: #89958d;
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 0.7px;
+.total-production span {
+  margin-top: 4px;
+  color: #5d6678;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
 }
 
-.distribution-bar {
+.distribution-track {
   display: flex;
   overflow: hidden;
-  height: 7px;
-  margin-top: 15px;
-  border-radius: 8px;
-  background: #edf1ee;
+  gap: 3px;
+  height: 8px;
+  margin-top: 19px;
+  border-radius: 99px;
+  background: #202630;
 }
 
-.distribution-bar span {
-  background: var(--material-color);
+.distribution-track span {
+  min-width: 0;
+  border-radius: 99px;
+  background: var(--segment-color);
+  opacity: 0.9;
 }
 
 .distribution-legend {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 11px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 13px;
 }
 
-.distribution-legend span {
-  display: inline-flex;
+.distribution-legend div {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  color: #647269;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-right: 1px solid #202630;
+  color: #7d8697;
+  font-size: 8px;
+}
+
+.distribution-legend div:first-child {
+  padding-left: 0;
+}
+
+.distribution-legend div:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.distribution-legend strong {
+  color: #c7cfda;
   font-size: 9px;
 }
 
-.distribution-legend i {
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-}
-
-.communication-summary {
+.legend-name {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 6px;
 }
 
-.status-card h2 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
+.legend-name i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
-.communication-summary p {
-  margin: 5px 0 0;
-  color: #849087;
-  font-size: 10px;
+.communication-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-color: #1d483c;
+  background:
+    radial-gradient(circle at 100% 100%, rgb(56 214 154 / 7%), transparent 45%),
+    #10151d;
+}
+
+.communication-card.offline {
+  border-color: #56303a;
+  background:
+    radial-gradient(circle at 100% 100%, rgb(255 101 132 / 7%), transparent 45%),
+    #10151d;
+}
+
+.communication-top span {
+  color: #596174;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.communication-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #285344;
+  border-radius: 8px;
+  background: rgb(56 214 154 / 7%);
+  color: #38d69a;
+}
+
+.communication-card.offline .communication-icon {
+  border-color: #59313b;
+  background: rgb(255 101 132 / 7%);
+  color: #ff6584;
+}
+
+.communication-icon svg {
+  width: 18px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
 }
 
 .communication-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #258257;
-  font-size: 10px;
-  font-weight: 500;
-  white-space: nowrap;
+  margin-top: 13px;
 }
 
-.communication-state i {
+.communication-state p {
+  margin: 0;
+  color: #38d69a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.communication-card.offline .communication-state p {
+  color: #ff6584;
+}
+
+.communication-state strong {
+  display: block;
+  margin-top: 3px;
+  color: #737d8f;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.communication-footer {
+  margin-top: auto;
+  color: #596174;
+  font-size: 8px;
+}
+
+.communication-footer i {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #20a268;
-  box-shadow: 0 0 0 3px #e1f2e8;
+  background: #38d69a;
+  box-shadow: 0 0 8px rgb(56 214 154 / 70%);
 }
 
-.page-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 17px;
-  color: #87938b;
-  font-size: 9px;
+.communication-card.offline .communication-footer i {
+  background: #ff6584;
+  box-shadow: 0 0 8px rgb(255 101 132 / 70%);
 }
 
-.page-footer b {
-  padding: 0 4px;
-  color: #bac4bd;
-}
-
-.connection-badge.offline {
-  border-color: #f0d0cb;
-  background: #fdf6f5;
-  color: #a63d2f;
-}
-
-.connection-badge.offline .connection-pulse {
-  background: #d85342;
-  box-shadow: 0 0 0 3px #f6dcd8;
-}
-
-.communication-state.offline {
-  color: #a63d2f;
-}
-
-.communication-state.offline i {
-  background: #d85342;
-  box-shadow: 0 0 0 3px #f6dcd8;
-}
-
-@media (max-width: 760px) {
-  .app-shell {
-    width: min(100% - 36px, 620px);
-    padding-top: 20px;
+@media (max-width: 1050px) {
+  .dashboard {
+    grid-template-columns: 180px minmax(0, 1fr);
   }
 
-  .project-card {
-    grid-template-columns: 1fr;
-    gap: 13px;
+  .workspace {
+    padding-inline: 24px;
   }
 
-  .project-goal {
+  .counter-main {
+    grid-template-columns: 108px minmax(0, 1fr);
+  }
+
+  .progress-ring {
+    width: 102px;
+    height: 102px;
+  }
+
+  .ring-center {
+    width: 78px;
+    height: 78px;
+  }
+}
+
+@media (max-width: 860px) {
+  .dashboard {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .sidebar {
     align-items: center;
+    padding-inline: 12px;
   }
 
-  .material-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .brand {
+    justify-content: center;
   }
 
-  .insights-grid {
+  .brand > span:last-child,
+  .nav-label,
+  .nav-item:not(.active),
+  .nav-item.active:not(.active),
+  .nav-item {
+    font-size: 0;
+  }
+
+  .nav-item {
+    width: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .nav-item svg {
+    width: 18px;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .counter-grid {
     grid-template-columns: 1fr;
   }
 
-  .distribution-card,
-  .status-card {
-    min-height: auto;
+  .counter-main {
+    grid-template-columns: 125px minmax(0, 1fr);
+  }
+
+  .progress-ring {
+    width: 116px;
+    height: 116px;
+  }
+
+  .ring-center {
+    width: 88px;
+    height: 88px;
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .communication-card {
+    min-height: 150px;
   }
 }
 
-@media (max-width: 480px) {
-  .app-shell {
-    width: calc(100% - 28px);
-    padding-top: 16px;
+@media (max-width: 600px) {
+  .dashboard {
+    display: block;
   }
 
-  .topbar {
-    padding-bottom: 16px;
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: 64px;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 12px 16px;
   }
 
-  .connection-badge {
-    gap: 7px;
-    padding: 7px 9px;
-    font-size: 10px;
+  .brand > span:last-child {
+    display: inline;
+    font-size: 12px;
   }
 
-  .page-heading {
-    align-items: flex-start;
-    margin: 22px 0 16px;
-  }
-
-  .page-heading h1 {
-    font-size: 23px;
-  }
-
-  .heading-subtitle {
-    max-width: 240px;
-    font-size: 11px;
-    line-height: 1.5;
-  }
-
-  .controller-summary {
-    gap: 6px;
-  }
-
-  .controller-summary small {
-    font-size: 8px;
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  .project-card {
-    padding: 14px;
-  }
-
-  .project-copy p {
-    font-size: 10px;
-  }
-
-  .section-heading {
-    align-items: flex-end;
-  }
-
-  .live-label {
-    font-size: 7px;
-  }
-
-  .material-grid {
-    gap: 12px;
-  }
-
-  .material-card {
-    min-height: 158px;
-    padding: 15px;
-  }
-
-  .material-icon {
+  .brand-mark {
     width: 34px;
     height: 34px;
   }
 
-  .material-icon svg {
-    width: 20px;
+  .side-nav {
+    display: flex;
+    margin: 0;
   }
 
-  .material-amount {
-    margin-top: 13px;
-    font-size: 42px;
+  .side-nav .nav-item:not(.active) {
+    display: none;
   }
 
-  .material-name {
-    margin-top: 7px;
-    font-size: 11px;
+  .nav-item.active {
+    width: 38px;
+    height: 38px;
+  }
+
+  .workspace {
+    padding: 20px 14px 30px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .topbar h1 {
+    font-size: 21px;
+  }
+
+  .status-text {
+    display: none;
+  }
+
+  .command-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .command-item {
+    border-right: 0;
+    border-bottom: 1px solid #1c222d;
+  }
+
+  .command-item:last-child {
+    border-bottom: 0;
+  }
+
+  .counter-main {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
   }
 
   .distribution-legend {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    column-gap: 13px;
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .communication-summary {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .page-footer {
-    flex-direction: column;
-    gap: 5px;
-    line-height: 1.5;
+  .distribution-legend div {
+    padding: 0;
+    border-right: 0;
   }
 }
 </style>

@@ -1,76 +1,134 @@
-# Interface CLP — Painel de Separação por Cores
+# Interface CLP // Centro de Triagem
 
-Aplicação web para monitoramento em tempo real de uma linha automatizada de triagem de peças por cor (**Verde**, **Amarelo** e **Vermelho**), integrada a um CLP **Siemens S7-1500** via protocolo **OPC UA**.
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-38d69a)
+![Vue](https://img.shields.io/badge/frontend-Vue%203-42b883)
+![Vite](https://img.shields.io/badge/build-Vite-646cff)
+![OPC UA](https://img.shields.io/badge/industrial-OPC%20UA-697cff)
 
-## Arquitetura
+Dashboard técnico para monitoramento em tempo real de uma linha automatizada de separação de peças por cor. A interface apresenta contadores circulares, distribuição da produção e estado da comunicação com um CLP Siemens S7-1500.
 
-```text
-CLP Siemens S7-1500 (OPC UA :4840)
-        │  Leitura a cada 500 ms (node-opcua)
-        ▼
-Backend Node.js + Express + Socket.IO (http://localhost:3000)
-        │  WebSocket em tempo real (socket.io)
-        ▼
-Frontend Vue 3 + Vite (http://localhost:5173)
+> Projeto acadêmico desenvolvido na Faculdade de Tecnologia Senai Roberto Mange — Campinas, SP.
+
+---
+
+## Visão geral
+
+O sistema foi criado para acompanhar uma automação industrial baseada em:
+
+- triagem de peças verdes, amarelas e vermelhas;
+- leitura de variáveis de contagem do CLP;
+- comunicação OPC UA;
+- atualização dos dados pela rede em tempo real;
+- visualização em um painel web moderno com tema escuro.
+
+```mermaid
+flowchart LR
+    PLC["CLP Siemens S7-1500"]
+    OPC["Servidor OPC UA\nPorta 4840"]
+    API["Backend Node.js\nExpress + Socket.IO\nPorta 3000"]
+    UI["Dashboard Vue 3\nPorta 5173"]
+
+    PLC --> OPC
+    OPC -->|"node-opcua\nLeitura a cada 500 ms"| API
+    API -->|"Socket.IO\nDados em tempo real"| UI
 ```
+
+---
+
+## Interface
+
+- Tema escuro com identidade técnica
+- Painel lateral de navegação
+- Indicadores visuais de conexão OPC UA
+- Contadores circulares por cor
+- Percentual de participação de cada classificação
+- Resumo da distribuição total da produção
+- Layout responsivo para desktop e dispositivos menores
+
+---
 
 ## Tecnologias
 
-- **Frontend:** Vue 3, Vite, `socket.io-client`
-- **Backend:** Node.js, Express, `socket.io`, `cors`, `node-opcua`
-- **Automação:** CLP Siemens S7-1500 / TIA Portal (Servidor OPC UA)
+| Camada | Tecnologias |
+| --- | --- |
+| Interface | Vue 3, Vite, JavaScript, CSS |
+| Comunicação web | Socket.IO Client |
+| Backend | Node.js, Express, CORS |
+| Automação | node-opcua |
+| CLP | Siemens S7-1500 |
+| Protocolo industrial | OPC UA |
 
-## Estrutura do Projeto
+---
+
+## Arquitetura do projeto
 
 ```text
-interface_clp/
+interface_grafica_AUI/
 ├── backend/
-│   ├── package.json       # Dependências do servidor OPC UA / Socket.IO
-│   └── server.js          # Cliente OPC UA + servidor HTTP/WebSocket (porta 3000)
+│   ├── package-lock.json
+│   ├── package.json
+│   └── server.js
 ├── src/
-│   ├── App.vue            # Interface principal do painel de separação
-│   ├── main.js            # Ponto de entrada do Vue
-│   └── styles.css         # Estilos globais
+│   ├── App.vue
+│   ├── main.js
+│   └── styles.css
+├── .vscode/
+│   └── extensions.json
 ├── index.html
-├── package.json           # Dependências e scripts do frontend
+├── jsconfig.json
+├── package-lock.json
+├── package.json
 ├── vite.config.js
 └── README.md
 ```
 
+---
+
 ## Pré-requisitos
 
-- **Node.js** `^22.18.0` ou `>=24.12.0` (com `npm`)
-- **CLP Siemens S7-1500** (físico ou simulado via **PLCSIM Advanced**) em modo `RUN`
-- Servidor **OPC UA** ativado no TIA Portal, com segurança `None` habilitada e acessível pela rede
+- Node.js `^22.18.0` ou `>=24.12.0`
+- npm
+- CLP Siemens S7-1500 em modo `RUN`, ou PLCSIM Advanced
+- Servidor OPC UA ativo no TIA Portal
+- Segurança OPC UA configurada conforme o ambiente do projeto
+
+---
 
 ## Configuração OPC UA
 
-Antes de iniciar, confirme em `backend/server.js` se o endereço do CLP, o namespace e os Node IDs correspondem ao seu projeto no TIA Portal:
+Os parâmetros de conexão ficam no arquivo [`backend/server.js`](backend/server.js).
 
-- **Endpoint:** `opc.tcp://169.254.171.199:4840`
-- **Namespace URI:** `http://vue`
-- **Segurança:** `MessageSecurityMode.None` / `SecurityPolicy.None`
+| Parâmetro | Valor atual |
+| --- | --- |
+| Endpoint | `opc.tcp://169.254.171.199:4840` |
+| Namespace URI | `http://vue` |
+| Security mode | `None` |
+| Security policy | `None` |
 
-| Cor / Dado | Variável no CLP (TIA Portal) | Node ID (`http://vue`) | Campo enviado ao frontend |
-| ---------- | ---------------------------- | ---------------------- | ------------------------- |
-| Vermelho   | `contPecasVermelhas`         | `i=3`                  | `contPecasVermelhas`      |
-| Verde      | `contPecasVerdes`            | `i=4`                  | `contPecasVerdes`         |
-| Amarelo    | `contPecasAmarelas`          | `i=5`                  | `contPecasAmarelas`       |
-| Total      | `contPecasTotal`             | `i=6`                  | `contPecasTotal`          |
+### Mapeamento das variáveis
 
-> Caso o IP do CLP ou os IDs mudem, ajuste as constantes `ENDPOINT`, `URI_NAMESPACE` e `IDS` em `backend/server.js`.
+| Classificação | Variável no TIA Portal | Node ID | Campo no frontend |
+| --- | --- | --- | --- |
+| Vermelho | `contPecasVermelhas` | `i=3` | `contPecasVermelhas` |
+| Verde | `contPecasVerdes` | `i=4` | `contPecasVerdes` |
+| Amarelo | `contPecasAmarelas` | `i=5` | `contPecasAmarelas` |
+| Total | `contPecasTotal` | `i=6` | `contPecasTotal` |
 
-## Passo a Passo para Execução
+Caso o endereço, namespace ou os IDs sejam alterados, atualize as constantes `ENDPOINT`, `URI_NAMESPACE` e `IDS` em `backend/server.js`.
 
-### 1. Instalar as dependências
+---
 
-Abra um terminal na pasta raiz do projeto (`interface_clp`) e instale as dependências do **frontend**:
+## Como executar
+
+### 1. Instalar as dependências do frontend
+
+Na pasta raiz do projeto:
 
 ```powershell
 npm install
 ```
 
-Em seguida, instale as dependências do **backend**:
+### 2. Instalar as dependências do backend
 
 ```powershell
 cd backend
@@ -78,32 +136,54 @@ npm install
 cd ..
 ```
 
-### 2. Verificar a comunicação com o CLP
-
-Certifique-se de que o CLP (ou PLCSIM Advanced) está ligado e na mesma faixa de rede do computador. No PowerShell, você pode testar a porta OPC UA (`4840`):
+### 3. Verificar a comunicação com o CLP
 
 ```powershell
 Test-NetConnection -ComputerName 169.254.171.199 -Port 4840
 ```
 
-O campo `TcpTestSucceeded` deve retornar `True`.
+O valor `TcpTestSucceeded` deve ser `True`.
 
-### 3. Iniciar o Backend (Terminal 1)
+### 4. Iniciar o backend
 
-No primeiro terminal, entre na pasta `backend` e execute o servidor:
+Em um terminal:
 
 ```powershell
 cd backend
 node server.js
 ```
 
-Saída esperada:
+O servidor será iniciado em:
 
 ```text
-Backend em http://localhost:3000
+http://localhost:3000
 ```
 
-Para confirmar que o backend está lendo o CLP corretamente, acesse http://localhost:3000 no navegador. O retorno deve ser um JSON semelhante a:
+### 5. Iniciar o frontend
+
+Em outro terminal, na pasta raiz:
+
+```powershell
+npm run dev
+```
+
+Acesse o endereço informado pelo Vite, normalmente:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## Endpoints e dados
+
+### Verificação do backend
+
+```text
+GET http://localhost:3000
+```
+
+Exemplo de resposta:
 
 ```json
 {
@@ -118,41 +198,57 @@ Para confirmar que o backend está lendo o CLP corretamente, acesse http://local
 }
 ```
 
-### 4. Iniciar o Frontend (Terminal 2)
+### Eventos Socket.IO
 
-Com o backend rodando, abra um **segundo terminal** na pasta raiz do projeto (`interface_clp`) e execute:
+| Evento | Finalidade |
+| --- | --- |
+| `opcStatus` | Estado da conexão OPC UA |
+| `dadosProducao` | Contadores atualizados da linha |
 
-```powershell
-npm run dev
-```
+---
 
-Acesse no navegador o endereço exibido pelo Vite (por padrão, http://localhost:5173). O indicador no topo da tela deve exibir **CLP Conectado** e os contadores serão atualizados automaticamente a cada 500 ms.
+## Build de produção
 
-## Build para Produção (Opcional)
-
-Para gerar a versão otimizada do frontend na pasta `dist/`:
+Gerar o frontend otimizado:
 
 ```powershell
 npm run build
 ```
 
-Para pré-visualizar o build gerado:
+Visualizar localmente o build gerado:
 
 ```powershell
 npm run preview
 ```
 
-## Solução de Problemas
+---
 
-- **Erro `EADDRINUSE` na porta `3000`:** já existe outra instância do `node server.js` aberta. Feche o terminal anterior (ou pressione `Ctrl + C`) e execute `node server.js` novamente.
-- **`opcUa: "Desconectado"` em http://localhost:3000:**
-  - Verifique se o CLP/PLCSIM está em `RUN` e se o IP em `ENDPOINT` (`backend/server.js`) está correto.
-  - Confirme no TIA Portal se o servidor OPC UA está ativo e aceitando `Security Policy: None`.
-  - Verifique se o adaptador de rede do PC está na mesma sub-rede do CLP (ex.: `169.254.x.x`).
-- **`Falha OPC UA: Namespace não encontrado`:** verifique se a URI da Server Interface no TIA Portal é exatamente `http://vue` (ou atualize `URI_NAMESPACE` em `backend/server.js`).
-- **Backend mostra `"Conectado"`, mas o frontend mostra `CLP Desconectado`:** confirme se o `backend/server.js` está rodando na porta `3000`, reinicie o backend após alterações no arquivo e atualize a página do navegador (`F5`).
+## Solução de problemas
 
-## Autoria
+### Porta 3000 ocupada
 
-- **Instituição:** Faculdade de Tecnologia Senai Roberto Mange — Campinas, SP
-- **Autores:** Kauan Magalhães Piacente · Nathalia Santos Ferreira
+```text
+EADDRINUSE
+```
+
+Finalize a instância anterior de `server.js` e inicie o backend novamente.
+
+### CLP desconectado
+
+- confirme que o CLP ou PLCSIM está em modo `RUN`;
+- valide o endereço configurado em `ENDPOINT`;
+- confirme que o servidor OPC UA está ativo no TIA Portal;
+- confirme que o computador e o CLP estão na mesma rede;
+- valide a configuração de segurança OPC UA.
+
+### Namespace não encontrado
+
+Verifique se a URI `http://vue` está registrada no projeto OPC UA do TIA Portal. Caso seja diferente, atualize `URI_NAMESPACE`.
+
+---
+
+## Autor
+
+Natan Barboza Andrade
+
+**Instituição:** Faculdade de Tecnologia Senai Roberto Mange — Campinas, SP
